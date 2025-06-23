@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 
 export default function Home() {
     const [text, setText] = useState("");
-    const [isloading, setIsloading] = useState(true);
+    const [isloading, setIsloading] = useState(false);
     const [movie, setMovie] = useState([]);
+    const [searchAttempted, setSearchAttempted] = useState(false);
+
 
     const getMovies = async (url) => {
         try {
@@ -11,20 +13,22 @@ export default function Home() {
             const data = await resp.json();
 
             if (data.Response === "True") {
-                setIsloading(false);
                 setMovie(data.Search);
             } else {
-                setIsloading(false);
                 setMovie([]);
             }
         } catch (error) {
-            console.log(error);
+            console.error("Error fetching data:", error);
+        } finally {
+            setIsloading(false);
         }
-    };
+    }; // ✅ CLOSED HERE
 
     const handle_click = () => {
-        const api = `http://www.omdbapi.com/?apikey=43becc80&s=${text}`;
+        if (text.trim() === "") return;
+        const api = `https://www.omdbapi.com/?apikey=43becc80&s=${text}`;
         setIsloading(true);
+        setSearchAttempted(true);   
         getMovies(api);
     };
 
@@ -55,7 +59,7 @@ export default function Home() {
 
             {
                 isloading ? (
-                    ""
+                    <p className="text-center text-lg mt-10 text-blue-500">Loading...</p>
                 ) : movie.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-8">
                         {movie.map((movie) => (
@@ -76,7 +80,10 @@ export default function Home() {
                         ))}
                     </div>
                 ) : (
+                    searchAttempted && movie.length === 0 && !isloading && (
                     <p className="text-center text-lg text-red-600 mt-10">No results found 😞</p>
+                )
+
                 )
             }
         </>
